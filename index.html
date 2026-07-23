@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#6d1f2f">
+  <meta name="description" content="A private, local-first wine cellar inventory">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>My Wine Cellar</title>
+</head>
+<body>
+  <noscript><div style="padding:20px;font-family:Arial,sans-serif"><h1>My Wine Cellar</h1><p>JavaScript is disabled. Please enable JavaScript and open this folder using Visual Studio Code Live Server.</p></div></noscript>
+  <div id="startupMessage" style="padding:12px 16px;background:#fff4d8;color:#5c4300;font-family:Arial,sans-serif">Loading My Wine Cellar…</div>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">LOCAL-FIRST PWA</p>
+      <h1>My Wine Cellar</h1>
+    </div>
+    <button id="installButton" class="secondary hidden" type="button">Install</button>
+  </header>
+
+  <nav class="tabs" aria-label="Main navigation">
+    <button class="tab active" data-view="dashboard">Dashboard</button>
+    <button class="tab" data-view="inventory">Inventory</button>
+    <button class="tab" data-view="add">Add wine</button>
+    <button class="tab" data-view="backup">Backup</button>
+  </nav>
+
+  <main>
+    <section id="dashboardView" class="view active">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">YOUR COLLECTION</p>
+          <h2 id="totalBottles">0 bottles</h2>
+          <p id="totalWines">0 wines recorded</p>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <article class="stat-card ready">
+          <span>Ready now</span>
+          <strong id="readyCount">0</strong>
+        </article>
+        <article class="stat-card soon">
+          <span>Ready within 12 months</span>
+          <strong id="soonCount">0</strong>
+        </article>
+        <article class="stat-card keep">
+          <span>Keep</span>
+          <strong id="keepCount">0</strong>
+        </article>
+        <article class="stat-card overdue">
+          <span>Past window</span>
+          <strong id="pastCount">0</strong>
+        </article>
+      </div>
+
+      <div class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">DRINKING DASHBOARD</p>
+            <h2>What should I drink?</h2>
+          </div>
+          <select id="dashboardFilter" aria-label="Filter dashboard">
+            <option value="ready">Ready now</option>
+            <option value="soon">Ready within 12 months</option>
+            <option value="past">Past drinking window</option>
+            <option value="keep">Keep</option>
+            <option value="unknown">No drinking dates</option>
+          </select>
+        </div>
+        <div id="dashboardList" class="wine-list"></div>
+      </div>
+    </section>
+
+    <section id="inventoryView" class="view">
+      <div class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">INVENTORY</p>
+            <h2>Your wines</h2>
+          </div>
+          <button id="addFromInventory" class="primary" type="button">Add wine</button>
+        </div>
+
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="Search name, producer, region or location">
+          <select id="inventoryFilter" aria-label="Filter inventory">
+            <option value="all">All wines</option>
+            <option value="ready">Ready now</option>
+            <option value="soon">Ready within 12 months</option>
+            <option value="keep">Keep</option>
+            <option value="past">Past window</option>
+            <option value="unknown">No drinking dates</option>
+          </select>
+        </div>
+
+        <div id="inventoryList" class="wine-list"></div>
+      </div>
+    </section>
+
+    <section id="addView" class="view">
+      <div class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">WINE RECORD</p>
+            <h2 id="formTitle">Add a wine</h2>
+          </div>
+        </div>
+
+        <form id="wineForm">
+          <input type="hidden" id="wineId">
+
+          <div class="form-grid">
+            <label class="full">
+              Wine name *
+              <input id="name" required maxlength="120" placeholder="e.g. Château Batailley">
+            </label>
+
+            <label>
+              Producer
+              <input id="producer" maxlength="120">
+            </label>
+
+            <label>
+              Vintage
+              <input id="vintage" type="number" min="1800" max="2200" inputmode="numeric">
+            </label>
+
+            <label>
+              Country
+              <input id="country" maxlength="80">
+            </label>
+
+            <label>
+              Region
+              <input id="region" maxlength="100">
+            </label>
+
+            <label>
+              Colour/style
+              <select id="colour">
+                <option value="">Select</option>
+                <option>Red</option>
+                <option>White</option>
+                <option>Rosé</option>
+                <option>Sparkling</option>
+                <option>Dessert</option>
+                <option>Fortified</option>
+                <option>Other</option>
+              </select>
+            </label>
+
+            <label>
+              Grape variety
+              <input id="grape" maxlength="120">
+            </label>
+
+            <label>
+              Quantity *
+              <input id="quantity" type="number" required min="0" max="9999" value="1" inputmode="numeric">
+            </label>
+
+            <label>
+              Storage location
+              <input id="location" maxlength="100" placeholder="e.g. Rack A3">
+            </label>
+
+            <label>
+              Purchase price (£)
+              <input id="price" type="number" min="0" step="0.01" inputmode="decimal">
+            </label>
+
+            <label>
+              Purchase date
+              <input id="purchaseDate" type="date">
+            </label>
+
+            <label>
+              Drink from
+              <input id="drinkFrom" type="date">
+            </label>
+
+            <label>
+              Drink by
+              <input id="drinkBy" type="date">
+            </label>
+
+            <label>
+              Barcode
+              <input id="barcode" inputmode="numeric" maxlength="40">
+            </label>
+
+            <label>
+              Rating
+              <select id="rating">
+                <option value="">Not rated</option>
+                <option value="1">1 / 5</option>
+                <option value="2">2 / 5</option>
+                <option value="3">3 / 5</option>
+                <option value="4">4 / 5</option>
+                <option value="5">5 / 5</option>
+              </select>
+            </label>
+
+            <label class="full">
+              Label photograph
+              <input id="labelPhoto" type="file" accept="image/*" capture="environment">
+              <span class="field-help">Photographs are resized before being saved on this device.</span>
+            </label>
+
+            <div id="photoPreviewWrap" class="photo-preview-wrap full hidden">
+              <img id="photoPreview" alt="Wine label preview">
+              <button id="removePhoto" class="danger-link" type="button">Remove photograph</button>
+            </div>
+
+            <label class="full">
+              Notes
+              <textarea id="notes" rows="4" maxlength="1000"></textarea>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button class="primary" type="submit">Save wine</button>
+            <button id="cancelEdit" class="secondary" type="button">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="backupView" class="view">
+      <div class="panel">
+        <p class="eyebrow">BACKUP & RESTORE</p>
+        <h2>Protect your cellar data</h2>
+        <p>Your inventory is stored on this device. Export a backup regularly and save it somewhere safe, such as iCloud Drive or OneDrive.</p>
+
+        <div class="backup-grid">
+          <button id="exportJson" class="primary" type="button">Export full backup</button>
+          <button id="exportCsv" class="secondary" type="button">Export CSV</button>
+          <label class="file-button secondary">
+            Restore backup
+            <input id="importJson" type="file" accept=".json,application/json">
+          </label>
+        </div>
+
+        <div class="warning-box">
+          <strong>Important:</strong> restoring a backup replaces the wines currently stored on this device.
+        </div>
+
+        <div class="panel inset">
+          <h3>Install on iPhone</h3>
+          <ol>
+            <li>Open the live website in Safari.</li>
+            <li>Tap the Share button.</li>
+            <li>Tap <strong>Add to Home Screen</strong>.</li>
+            <li>Tap <strong>Add</strong>.</li>
+          </ol>
+        </div>
+
+        <button id="clearAll" class="danger" type="button">Delete all local data</button>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="detailsDialog">
+    <div id="dialogContent"></div>
+    <form method="dialog">
+      <button class="secondary" type="submit">Close</button>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    window.addEventListener("error", function (event) {
+      const box = document.getElementById("startupMessage");
+      if (box) { box.textContent = "The app could not start: " + (event.message || "unknown error") + ". Open it with Live Server rather than by double-clicking index.html."; }
+    });
+  </script>
+  <script src="database.js"></script>
+  <script src="app.js"></script>
+  <script>
+    window.addEventListener("load", function () {
+      const box = document.getElementById("startupMessage");
+      if (box) box.remove();
+    });
+  </script>
+</body>
+</html>
