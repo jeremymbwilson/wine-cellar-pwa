@@ -2,6 +2,8 @@ const App = (() => {
   let wines = [];
   let currentPhoto = "";
   let deferredPrompt = null;
+  let pendingIdentification = null;
+  let pendingWindow = null;
 
   const $ = id => document.getElementById(id);
   const currentYear = new Date().getFullYear();
@@ -147,7 +149,12 @@ const App = (() => {
     $("wineForm").reset();
     $("wineId").value = "";
     $("quantity").value = 1;
+    $("bottleSize").value = "750";
     $("formTitle").textContent = "Add a wine";
+    pendingIdentification = null;
+    pendingWindow = null;
+    $("identificationReview").classList.add("hidden");
+    $("windowReview").classList.add("hidden");
     currentPhoto = "";
     updatePhotoPreview();
   }
@@ -211,12 +218,21 @@ const App = (() => {
       region: formValue("region"),
       colour: $("colour").value,
       grape: formValue("grape"),
+      appellation: formValue("appellation"),
+      classification: formValue("classification"),
       quantity: Number($("quantity").value || 0),
       location: formValue("location"),
       price: formValue("price"),
       purchaseDate: $("purchaseDate").value,
       drinkFrom,
       drinkBy,
+      storageCondition: $("storageCondition").value,
+      bottleSize: $("bottleSize").value,
+      peakFromYear: pendingWindow?.peakFromYear || existing?.peakFromYear || null,
+      peakToYear: pendingWindow?.peakToYear || existing?.peakToYear || null,
+      windowConfidence: pendingWindow?.confidence || existing?.windowConfidence || "",
+      windowSourceType: pendingWindow?.sourceType || existing?.windowSourceType || "",
+      windowRationale: pendingWindow ? [...(pendingWindow.basis || []), ...(pendingWindow.assumptions || [])].join("; ") : (existing?.windowRationale || ""),
       barcode: formValue("barcode"),
       rating: $("rating").value,
       notes: formValue("notes"),
@@ -231,6 +247,18 @@ const App = (() => {
     }
 
     await WineDB.put(wine);
+    if ($("shareMetadata").checked && WineCloud.getAppKey()) {
+      WineCloud.confirmWine({
+        wineName: wine.name, producer: wine.producer, vintage: wine.vintage,
+        country: wine.country, region: wine.region, appellation: wine.appellation,
+        classification: wine.classification, colour: wine.colour, grape: wine.grape,
+        barcode: wine.barcode, confidence: pendingIdentification?.confidence || "user-confirmed",
+        drinkFromYear: dateYear(wine.drinkFrom), drinkByYear: dateYear(wine.drinkBy),
+        peakFromYear: wine.peakFromYear, peakToYear: wine.peakToYear,
+        windowConfidence: wine.windowConfidence, windowSourceType: wine.windowSourceType,
+        windowRationale: wine.windowRationale
+      }).catch(error => console.warn("Shared catalogue update failed:", error.message));
+    }
     await refresh();
     resetForm();
     switchView("inventory");
@@ -239,13 +267,18 @@ const App = (() => {
 
   function populateForm(wine) {
     const fields = [
-      "name", "producer", "vintage", "country", "region", "colour", "grape",
+      "name", "producer", "vintage", "country", "region", "colour", "grape", "appellation", "classification",
       "quantity", "location", "price", "purchaseDate", "drinkFrom", "drinkBy",
-      "barcode", "rating", "notes"
+      "barcode", "rating", "notes", "storageCondition", "bottleSize"
     ];
     $("wineId").value = wine.id;
     fields.forEach(field => $(field).value = wine[field] ?? "");
     currentPhoto = wine.photo || "";
+    pendingWindow = wine.windowConfidence ? {
+      peakFromYear: wine.peakFromYear, peakToYear: wine.peakToYear,
+      confidence: wine.windowConfidence, sourceType: wine.windowSourceType,
+      basis: wine.windowRationale ? [wine.windowRationale] : [], assumptions: []
+    } : null;
     updatePhotoPreview();
     $("formTitle").textContent = "Edit wine";
     switchView("add");
@@ -260,10 +293,15 @@ const App = (() => {
       <p><strong>Region:</strong> ${escapeHtml([wine.region, wine.country].filter(Boolean).join(", ") || "—")}</p>
       <p><strong>Style:</strong> ${escapeHtml(wine.colour || "—")}</p>
       <p><strong>Grape:</strong> ${escapeHtml(wine.grape || "—")}</p>
+      <p><strong>Appellation:</strong> ${escapeHtml(wine.appellation || "—")}</p>
+      <p><strong>Classification:</strong> ${escapeHtml(wine.classification || "—")}</p>
       <p><strong>Quantity:</strong> ${Number(wine.quantity || 0)}</p>
       <p><strong>Location:</strong> ${escapeHtml(wine.location || "—")}</p>
       <p><strong>Purchase price:</strong> ${escapeHtml(formatMoney(wine.price) || "—")}</p>
       <p><strong>Drinking window:</strong> ${escapeHtml(wine.drinkFrom || "—")} to ${escapeHtml(wine.drinkBy || "—")}</p>
+      <p><strong>Likely peak:</strong> ${escapeHtml(wine.peakFromYear && wine.peakToYear ? `${wine.peakFromYear}–${wine.peakToYear}` : "—")}</p>
+      <p><strong>Window basis:</strong> ${escapeHtml(wine.windowSourceType || "—")} (${escapeHtml(wine.windowConfidence || "—")})</p>
+      <p><strong>Storage:</strong> ${escapeHtml(wine.storageCondition || "—")}; ${escapeHtml(wine.bottleSize || "750")} ml</p>
       <p><strong>Barcode:</strong> ${escapeHtml(wine.barcode || "—")}</p>
       <p><strong>Rating:</strong> ${escapeHtml(wine.rating ? `${wine.rating}/5` : "—")}</p>
       <p><strong>Notes:</strong><br>${escapeHtml(wine.notes || "—")}</p>`;
@@ -339,11 +377,11 @@ const App = (() => {
   function exportCsv() {
     const headers = [
       "Name","Producer","Vintage","Country","Region","Colour","Grape","Quantity",
-      "Location","Price","Purchase date","Drink from","Drink by","Barcode","Rating","Notes"
+      "Location","Price","Purchase date","Drink from","Drink by","Peak from","Peak to","Storage condition","Bottle size","Window confidence","Window source","Window rationale","Barcode","Rating","Notes"
     ];
     const rows = wines.map(w => [
       w.name,w.producer,w.vintage,w.country,w.region,w.colour,w.grape,w.quantity,
-      w.location,w.price,w.purchaseDate,w.drinkFrom,w.drinkBy,w.barcode,w.rating,w.notes
+      w.location,w.price,w.purchaseDate,w.drinkFrom,w.drinkBy,w.peakFromYear,w.peakToYear,w.storageCondition,w.bottleSize,w.windowConfidence,w.windowSourceType,w.windowRationale,w.barcode,w.rating,w.notes
     ].map(csvCell).join(","));
     download(`wine-cellar-${dateStamp()}.csv`, [headers.map(csvCell).join(","), ...rows].join("\r\n"), "text/csv;charset=utf-8");
     showToast("CSV exported.");
@@ -425,6 +463,31 @@ const App = (() => {
     showToast("Looking up barcode…");
 
     try {
+      if (WineCloud.getAppKey()) {
+        try {
+          const catalogue = await WineCloud.catalogueByBarcode(cleaned);
+          const match = catalogue.matches?.[0];
+          if (match) {
+            const useShared = confirm(`Private catalogue match:
+
+${match.producer || ""} ${match.wineName || ""}${match.vintage ? ` ${match.vintage}` : ""}
+${match.region || ""} ${match.country || ""}
+
+Use these details?`);
+            if (useShared) {
+              fillIfBlank("name", match.wineName); fillIfBlank("producer", match.producer);
+              fillIfBlank("country", match.country); fillIfBlank("region", match.region);
+              fillIfBlank("appellation", match.appellation); fillIfBlank("classification", match.classification);
+              fillIfBlank("colour", match.colour); fillIfBlank("grape", match.grapeVarieties);
+              if (match.vintage) fillIfBlank("vintage", String(match.vintage));
+              $("barcode").value = cleaned;
+              if (match.drinkFromYear) $("drinkFrom").value = `${match.drinkFromYear}-01-01`;
+              if (match.drinkByYear) $("drinkBy").value = `${match.drinkByYear}-12-31`;
+              switchView("add"); showToast("Private catalogue details loaded."); return;
+            }
+          }
+        } catch (cloudError) { console.warn("Catalogue lookup unavailable:", cloudError.message); }
+      }
       const product = await WineLookup.lookupOpenFoodFacts(cleaned);
       if (!product) {
         showToast("No external product match was found. Enter the wine manually.");
@@ -475,6 +538,101 @@ const App = (() => {
       console.error(error);
       showToast(error.message || "The barcode scanner could not start.");
     }
+  }
+
+
+  function identificationMarkup(result) {
+    const rows = [
+      ["Wine", result.wineName], ["Producer", result.producer], ["Vintage", result.vintage],
+      ["Country", result.country], ["Region", result.region], ["Appellation", result.appellation],
+      ["Classification", result.classification], ["Colour", result.colour],
+      ["Grapes", (result.grapeVarieties || []).join(", ")], ["Confidence", result.confidence]
+    ].filter(([, value]) => value !== null && value !== undefined && String(value).trim());
+    return `<dl class="review-grid">${rows.map(([k,v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join("")}</dl>` +
+      ((result.warnings || []).length ? `<p><strong>Warnings:</strong> ${escapeHtml(result.warnings.join("; "))}</p>` : "") +
+      `<p class="field-help">Check all details carefully, especially the vintage. Nothing is saved until you press Save wine.</p>`;
+  }
+
+  async function identifyLabel() {
+    if (!currentPhoto) { showToast("Take or choose a label photograph first."); return; }
+    if (!WineCloud.getAppKey()) { showToast("Save your private app access key on the Backup screen first."); return; }
+    showToast("Analysing label…");
+    try {
+      pendingIdentification = await WineCloud.identifyWine(currentPhoto);
+      $("identificationResults").innerHTML = identificationMarkup(pendingIdentification);
+      $("identificationReview").classList.remove("hidden");
+    } catch (error) { console.error(error); showToast(error.message || "Label identification failed."); }
+  }
+
+  function acceptIdentification() {
+    const r = pendingIdentification; if (!r) return;
+    fillIfBlank("name", r.wineName); fillIfBlank("producer", r.producer);
+    if (r.vintage) fillIfBlank("vintage", String(r.vintage));
+    fillIfBlank("country", r.country); fillIfBlank("region", r.region);
+    fillIfBlank("appellation", r.appellation); fillIfBlank("classification", r.classification);
+    fillIfBlank("colour", r.colour); fillIfBlank("grape", (r.grapeVarieties || []).join(", "));
+    $("identificationReview").classList.add("hidden");
+    showToast("Suggested details applied. Please verify them.");
+  }
+
+  async function estimateDrinkingWindow() {
+    const payload = {
+      name: formValue("name"), producer: formValue("producer"), vintage: Number(formValue("vintage")),
+      country: formValue("country"), region: formValue("region"), appellation: formValue("appellation"),
+      classification: formValue("classification"), colour: $("colour").value, grape: formValue("grape"),
+      storageCondition: $("storageCondition").value, bottleSize: $("bottleSize").value
+    };
+    if (!payload.name || !payload.vintage) { showToast("Enter and confirm the wine name and vintage first."); return; }
+    if (!WineCloud.getAppKey()) { showToast("Save your private app access key on the Backup screen first."); return; }
+    showToast("Estimating drinking window…");
+    try {
+      pendingWindow = await WineCloud.estimateWindow(payload);
+      const r = pendingWindow;
+      $("windowReview").innerHTML = `<h3>Suggested drinking window</h3>
+        <p><strong>Start:</strong> ${escapeHtml(r.drinkFromYear || "—")} &nbsp; <strong>Peak:</strong> ${escapeHtml(r.peakFromYear || "—")}–${escapeHtml(r.peakToYear || "—")} &nbsp; <strong>Drink by:</strong> ${escapeHtml(r.drinkByYear || "—")}</p>
+        <p><strong>Confidence:</strong> ${escapeHtml(r.confidence)}; <strong>basis:</strong> ${escapeHtml(r.sourceType)}</p>
+        <p>${escapeHtml((r.basis || []).join("; "))}</p><p class="field-help">${escapeHtml(r.warning || "This is guidance rather than a guarantee.")}</p>
+        <div class="review-actions"><button id="applyWindowButton" class="primary" type="button">Apply suggested dates</button><button id="dismissWindowButton" class="secondary" type="button">Keep existing dates</button></div>`;
+      $("windowReview").classList.remove("hidden");
+      $("applyWindowButton").addEventListener("click", applyWindow);
+      $("dismissWindowButton").addEventListener("click", () => $("windowReview").classList.add("hidden"));
+    } catch (error) { console.error(error); showToast(error.message || "Drinking-window estimation failed."); }
+  }
+
+  function applyWindow() {
+    if (!pendingWindow) return;
+    if (pendingWindow.drinkFromYear) $("drinkFrom").value = `${pendingWindow.drinkFromYear}-01-01`;
+    if (pendingWindow.drinkByYear) $("drinkBy").value = `${pendingWindow.drinkByYear}-12-31`;
+    $("windowReview").classList.add("hidden");
+    showToast("Suggested dates applied. You can edit them before saving.");
+  }
+
+  async function askSommelier() {
+    if (!WineCloud.getAppKey()) { showToast("Save your private app access key on the Backup screen first."); return; }
+    const candidates = wines.filter(w => Number(w.quantity || 0) > 0).map(w => ({
+      wineId: w.id, wine: wineTitle(w), producer: w.producer, country: w.country, region: w.region,
+      colour: w.colour, grape: w.grape, quantity: w.quantity, status: statusFor(w),
+      drinkFrom: w.drinkFrom, drinkBy: w.drinkBy, peakFromYear: w.peakFromYear, peakToYear: w.peakToYear,
+      rating: w.rating
+    }));
+    if (!candidates.length) { showToast("Add some wines before asking the sommelier."); return; }
+    showToast("Choosing wines…");
+    try {
+      const result = await WineCloud.sommelier({ meal: $("sommelierMeal").value.trim(), numberOfPeople: Number($("sommelierPeople").value || 2), preferences: $("sommelierPreference").value, candidateWines: candidates });
+      const byId = new Map(wines.map(w => [w.id, w]));
+      $("sommelierResults").innerHTML = `<h3>${escapeHtml(result.summary)}</h3>` + (result.recommendations || []).map(rec => {
+        const wine = byId.get(rec.wineId); if (!wine) return "";
+        return `<article class="recommendation"><strong>${escapeHtml(wineTitle(wine))}</strong><p>${escapeHtml(rec.reason)}</p><span>${rec.bottlesSuggested} bottle${rec.bottlesSuggested === 1 ? "" : "s"} suggested</span></article>`;
+      }).join("") + ((result.cautions || []).length ? `<p class="field-help">${escapeHtml(result.cautions.join("; "))}</p>` : "");
+      $("sommelierResults").classList.remove("hidden");
+    } catch (error) { console.error(error); showToast(error.message || "Sommelier request failed."); }
+  }
+
+  async function testCloud() {
+    try {
+      const health = await WineCloud.health();
+      $("cloudStatus").textContent = `Connection OK. Database: ${health.databaseConfigured ? "configured" : "missing"}; AI: ${health.aiConfigured ? "configured" : "missing"}; access key: ${health.accessKeyConfigured ? "configured" : "not required"}.`;
+    } catch (error) { $("cloudStatus").textContent = `Connection failed: ${error.message}`; }
   }
 
   function registerServiceWorker() {
@@ -547,6 +705,14 @@ const App = (() => {
       if (file) importJson(file);
     });
     $("clearAll").addEventListener("click", clearAll);
+    $("identifyLabelButton").addEventListener("click", identifyLabel);
+    $("acceptIdentification").addEventListener("click", acceptIdentification);
+    $("rejectIdentification").addEventListener("click", () => $("identificationReview").classList.add("hidden"));
+    $("estimateWindowButton").addEventListener("click", estimateDrinkingWindow);
+    $("askSommelierButton").addEventListener("click", askSommelier);
+    $("appAccessKey").value = WineCloud.getAppKey();
+    $("saveAccessKey").addEventListener("click", () => { WineCloud.setAppKey($("appAccessKey").value); showToast("Access key saved on this device."); });
+    $("testCloudButton").addEventListener("click", testCloud);
 
     $("scanBarcodeButton").addEventListener("click", startBarcodeScan);
     $("lookupBarcodeButton").addEventListener("click", () => lookupBarcode($("barcode").value));

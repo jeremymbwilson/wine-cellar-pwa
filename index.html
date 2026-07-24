@@ -25,6 +25,7 @@
     <button class="tab active" data-view="dashboard">Dashboard</button>
     <button class="tab" data-view="inventory">Inventory</button>
     <button class="tab" data-view="add">Add wine</button>
+    <button class="tab" data-view="sommelier">Sommelier</button>
     <button class="tab" data-view="backup">Backup</button>
   </nav>
 
@@ -159,6 +160,16 @@
             </label>
 
             <label>
+              Appellation
+              <input id="appellation" maxlength="120">
+            </label>
+
+            <label>
+              Classification
+              <input id="classification" maxlength="120">
+            </label>
+
+            <label>
               Quantity *
               <input id="quantity" type="number" required min="0" max="9999" value="1" inputmode="numeric">
             </label>
@@ -189,6 +200,32 @@
             </label>
 
             <label>
+              Storage conditions
+              <select id="storageCondition">
+                <option value="">Not specified</option>
+                <option value="controlled">Temperature-controlled cellar</option>
+                <option value="cool-stable">Cool, stable domestic storage</option>
+                <option value="ordinary">Ordinary room storage</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </label>
+
+            <label>
+              Bottle size
+              <select id="bottleSize">
+                <option value="750">Standard 750 ml</option>
+                <option value="375">Half bottle 375 ml</option>
+                <option value="1500">Magnum 1.5 litres</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+
+            <div class="full action-panel">
+              <button id="estimateWindowButton" class="secondary" type="button">Suggest drinking window</button>
+              <div id="windowReview" class="review-panel hidden"></div>
+            </div>
+
+            <label>
               Barcode
               <input id="barcode" inputmode="numeric" maxlength="40">
               <span class="field-help">Scan a retail EAN/UPC barcode or enter it manually.</span>
@@ -214,7 +251,18 @@
               Label photograph
               <input id="labelPhoto" type="file" accept="image/*" capture="environment">
               <span class="field-help">Photographs are resized before being saved on this device.</span>
+              <button id="identifyLabelButton" class="secondary" type="button">Identify wine from label</button>
+              <span class="field-help">The resized photograph is sent to your private Cloudflare Function and then to the configured AI service.</span>
             </label>
+
+            <section id="identificationReview" class="review-panel full hidden">
+              <h3>Possible wine identified</h3>
+              <div id="identificationResults"></div>
+              <div class="review-actions">
+                <button id="acceptIdentification" class="primary" type="button">Use suggested details</button>
+                <button id="rejectIdentification" class="secondary" type="button">Ignore suggestions</button>
+              </div>
+            </section>
 
             <div id="photoPreviewWrap" class="photo-preview-wrap full hidden">
               <img id="photoPreview" alt="Wine label preview">
@@ -227,6 +275,11 @@
             </label>
           </div>
 
+          <label class="sharing-choice">
+            <input id="shareMetadata" type="checkbox" checked>
+            Share confirmed wine metadata with the private household catalogue (never quantity, price, location or personal notes).
+          </label>
+
           <div class="form-actions">
             <button class="primary" type="submit">Save wine</button>
             <button id="cancelEdit" class="secondary" type="button">Cancel</button>
@@ -235,10 +288,48 @@
       </div>
     </section>
 
+
+    <section id="sommelierView" class="view">
+      <div class="panel">
+        <p class="eyebrow">PERSONAL SOMMELIER</p>
+        <h2>Choose a bottle from your cellar</h2>
+        <p>Only a shortlist of your wine metadata is sent when you ask for a recommendation. Personal notes, purchase price and exact storage location are excluded.</p>
+        <div class="form-grid">
+          <label class="full">Meal or occasion
+            <textarea id="sommelierMeal" rows="3" placeholder="e.g. Roast lamb for six people on Sunday"></textarea>
+          </label>
+          <label>Number of people
+            <input id="sommelierPeople" type="number" min="1" max="30" value="2">
+          </label>
+          <label>Preference
+            <select id="sommelierPreference">
+              <option value="best-match">Best match</option>
+              <option value="drink-soon">Prioritise wines to drink soon</option>
+              <option value="avoid-valuable">Avoid the most valuable bottles</option>
+              <option value="special">Special occasion</option>
+            </select>
+          </label>
+        </div>
+        <button id="askSommelierButton" class="primary" type="button">Ask the sommelier</button>
+        <div id="sommelierResults" class="review-panel hidden"></div>
+      </div>
+    </section>
+
     <section id="backupView" class="view">
       <div class="panel">
         <p class="eyebrow">BACKUP & RESTORE</p>
         <h2>Protect your cellar data</h2>
+        <div class="panel inset">
+          <h3>Cloud features</h3>
+          <label>Private app access key
+            <input id="appAccessKey" type="password" autocomplete="off" placeholder="Enter the key configured in Cloudflare">
+          </label>
+          <div class="review-actions">
+            <button id="saveAccessKey" class="secondary" type="button">Save key on this device</button>
+            <button id="testCloudButton" class="secondary" type="button">Test cloud connection</button>
+          </div>
+          <p id="cloudStatus" class="field-help">Cloud features require the D1 binding, OpenAI API key and app access key to be configured in Cloudflare.</p>
+        </div>
         <p>Your inventory is stored on this device. Export a backup regularly and save it somewhere safe, such as iCloud Drive or OneDrive.</p>
 
         <div class="backup-grid">
@@ -298,6 +389,7 @@
   <script src="database.js"></script>
   <script src="wine-lookup.js"></script>
   <script src="scanner.js"></script>
+  <script src="cloud-api.js"></script>
   <script src="app.js"></script>
   <script>
     window.addEventListener("load", function () {

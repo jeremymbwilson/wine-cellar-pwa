@@ -1,4 +1,4 @@
-const CACHE_NAME = "wine-cellar-v3a";
+const CACHE_NAME = "wine-cellar-v3bd";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "./database.js",
   "./scanner.js",
   "./wine-lookup.js",
+  "./cloud-api.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

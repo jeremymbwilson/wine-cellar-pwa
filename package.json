@@ -1,0 +1,12 @@
+{
+  "name": "wine-cellar-pwa",
+  "private": true,
+  "version": "3.4.0",
+  "scripts": {
+    "dev": "wrangler pages dev .",
+    "db:migrate": "wrangler d1 migrations apply wine-cellar-catalogue --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

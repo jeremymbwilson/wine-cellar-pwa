@@ -1,0 +1,9 @@
+name = "wine-cellar-pwa"
+compatibility_date = "2026-07-24"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wine-cellar-catalogue"
+database_id = "a8f3b8a1-a242-41a4-90ca-abba47765b7f"
+migrations_dir = "migrations"
