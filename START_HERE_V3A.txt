@@ -1,0 +1,18 @@
+WINE CELLAR PWA VERSION 3A — START HERE
+
+This is a complete replacement project. Do not paste individual files into the old folder.
+
+1. Keep your current working folder as a backup.
+2. Extract this ZIP to a NEW folder.
+3. Open the new WineCellarPWA_v3A folder in Visual Studio Code.
+4. Right-click index.html and select Open with Live Server.
+5. Test inventory, backup and barcode lookup.
+6. Camera barcode scanning must be tested from the HTTPS Cloudflare address on the iPhone.
+7. Upload the contents of this folder to your GitHub repository.
+8. Cloudflare will deploy the update automatically.
+
+IMPORTANT
+- Export a JSON backup from the old app before replacing it.
+- The barcode scanner reads EAN/UPC codes.
+- Open Food Facts does not contain every wine.
+- Always confirm the vintage and suggested metadata.

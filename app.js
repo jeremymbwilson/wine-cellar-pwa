@@ -383,6 +383,100 @@ const App = (() => {
     showToast("All local data deleted.");
   }
 
+
+  function fillIfBlank(id, value) {
+    if (!value) return;
+    const field = $(id);
+    if (field && !field.value.trim()) field.value = value;
+  }
+
+  async function lookupBarcode(barcode) {
+    const cleaned = String(barcode || "").trim();
+    if (!cleaned) {
+      showToast("Enter or scan a barcode first.");
+      return;
+    }
+
+    $("barcode").value = cleaned;
+
+    const localMatch = wines.find(wine => String(wine.barcode || "").trim() === cleaned);
+    if (localMatch) {
+      const useLocal = confirm(
+        `This barcode is already saved as ${wineTitle(localMatch)}.\n\n` +
+        "Select OK to use its product details in the form."
+      );
+      if (useLocal) {
+        const copy = { ...localMatch, id: "", quantity: 1, vintage: "" };
+        $("wineId").value = "";
+        [
+          "name", "producer", "country", "region", "colour", "grape",
+          "location", "price", "rating", "notes"
+        ].forEach(field => $(field).value = copy[field] ?? "");
+        $("quantity").value = 1;
+        $("barcode").value = cleaned;
+        currentPhoto = copy.photo || "";
+        updatePhotoPreview();
+        switchView("add");
+        showToast("Known wine details loaded. Please confirm the vintage.");
+      }
+      return;
+    }
+
+    showToast("Looking up barcode…");
+
+    try {
+      const product = await WineLookup.lookupOpenFoodFacts(cleaned);
+      if (!product) {
+        showToast("No external product match was found. Enter the wine manually.");
+        return;
+      }
+
+      const summary = [
+        product.name ? `Name: ${product.name}` : "",
+        product.producer ? `Producer/brand: ${product.producer}` : "",
+        product.country ? `Country: ${product.country}` : "",
+        product.region ? `Origin: ${product.region}` : "",
+        "",
+        product.looksLikeWine
+          ? "The source appears to classify this as a wine or alcoholic product."
+          : "The source did not clearly classify this as wine.",
+        "",
+        "Use these suggested details? Please verify every field, especially the vintage."
+      ].filter(line => line !== undefined).join("\n");
+
+      if (!confirm(summary)) return;
+
+      fillIfBlank("name", product.name);
+      fillIfBlank("producer", product.producer);
+      fillIfBlank("country", product.country);
+      fillIfBlank("region", product.region);
+      $("barcode").value = cleaned;
+
+      if (!currentPhoto && product.photo) {
+        currentPhoto = product.photo;
+        updatePhotoPreview();
+      }
+
+      switchView("add");
+      showToast("Suggested product details loaded. Please check them before saving.");
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || "Barcode lookup failed.");
+    }
+  }
+
+  async function startBarcodeScan() {
+    try {
+      await BarcodeScanner.start(async barcode => {
+        $("barcode").value = barcode;
+        await lookupBarcode(barcode);
+      });
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || "The barcode scanner could not start.");
+    }
+  }
+
   function registerServiceWorker() {
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
@@ -453,6 +547,13 @@ const App = (() => {
       if (file) importJson(file);
     });
     $("clearAll").addEventListener("click", clearAll);
+
+    $("scanBarcodeButton").addEventListener("click", startBarcodeScan);
+    $("lookupBarcodeButton").addEventListener("click", () => lookupBarcode($("barcode").value));
+    $("closeScannerButton").addEventListener("click", BarcodeScanner.stop);
+    document.querySelectorAll(".tab").forEach(tab =>
+      tab.addEventListener("click", () => BarcodeScanner.stop())
+    );
   }
 
   async function initialise() {

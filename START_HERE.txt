@@ -1,0 +1,12 @@
+MY WINE CELLAR — START HERE
+
+Do not double-click index.html and do not use the Visual Studio Code file preview.
+
+1. Extract the entire ZIP file.
+2. Open the extracted WineCellarPWA folder in Visual Studio Code.
+3. Install the extension “Live Server” by Ritwick Dey.
+4. In the Explorer panel, right-click index.html.
+5. Choose “Open with Live Server”.
+6. Your browser should open an address beginning http://127.0.0.1:5500/ or http://localhost:5500/.
+
+All files and the icons folder must remain together.

@@ -191,6 +191,11 @@
             <label>
               Barcode
               <input id="barcode" inputmode="numeric" maxlength="40">
+              <span class="field-help">Scan a retail EAN/UPC barcode or enter it manually.</span>
+              <div class="barcode-actions">
+                <button id="scanBarcodeButton" class="secondary" type="button">Scan barcode</button>
+                <button id="lookupBarcodeButton" class="secondary" type="button">Look up barcode</button>
+              </div>
             </label>
 
             <label>
@@ -264,6 +269,16 @@
     </section>
   </main>
 
+
+  <div id="barcodeScanner" class="scanner-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
+    <div class="scanner-panel">
+      <h2 id="scannerTitle">Scan bottle barcode</h2>
+      <video id="barcodeVideo" playsinline muted aria-label="Barcode camera"></video>
+      <p id="scannerMessage">Position the barcode clearly inside the camera view.</p>
+      <button id="closeScannerButton" class="secondary" type="button">Cancel</button>
+    </div>
+  </div>
+
   <dialog id="detailsDialog">
     <div id="dialogContent"></div>
     <form method="dialog">
@@ -279,7 +294,10 @@
       if (box) { box.textContent = "The app could not start: " + (event.message || "unknown error") + ". Open it with Live Server rather than by double-clicking index.html."; }
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.2/umd/zxing-browser.min.js"></script>
   <script src="database.js"></script>
+  <script src="wine-lookup.js"></script>
+  <script src="scanner.js"></script>
   <script src="app.js"></script>
   <script>
     window.addEventListener("load", function () {
