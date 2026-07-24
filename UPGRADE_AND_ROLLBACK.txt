@@ -1,0 +1,28 @@
+VERSION 3.1 — SIMPLE UPGRADE GUIDE
+
+1. Open the currently installed Wine Cellar app.
+2. Go to Settings/Backup and export a full JSON backup.
+3. Keep your existing source-code folder as a rollback copy.
+4. Extract WineCellarPWA_v3_1.zip into a new folder.
+5. Open that new folder in Visual Studio Code.
+6. Right-click index.html and choose Open with Live Server.
+7. Test Add, Edit, Drink one, Search, Photos and Backup.
+8. Copy the Version 3.1 files into your cloned GitHub repository folder.
+9. In GitHub Desktop, enter the summary:
+   Release Wine Cellar Version 3.1
+10. Commit to main and select Push origin.
+11. Wait for Cloudflare to publish the new commit.
+12. Open the live site in Safari and refresh it.
+13. Restore your JSON backup if the phone's local database is missing.
+
+ROLLBACK
+
+1. In GitHub Desktop, restore the previous release commit, or copy your saved old source files back into the repository.
+2. Commit and push the rollback.
+3. Restore the JSON backup if required.
+
+IMPORTANT
+
+- Personal inventory is stored on each device.
+- Export a JSON backup before removing an installed Home Screen app.
+- Cloudflare's separate failed Worker project is not required for this static Version 3.1 release.

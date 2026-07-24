@@ -1,12 +1,12 @@
 {
   "name": "My Wine Cellar",
   "short_name": "Wine Cellar",
-  "description": "Track wines, quantities, label photographs and drinking windows.",
+  "description": "Private offline-first wine cellar management",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7f2eb",
-  "theme_color": "#6d1f2f",
+  "background_color": "#f6f1ea",
+  "theme_color": "#551725",
   "orientation": "portrait-primary",
   "icons": [
     {

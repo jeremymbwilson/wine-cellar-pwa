@@ -1,206 +1,262 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-GB">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#6d1f2f">
-  <meta name="description" content="A private, local-first wine cellar inventory">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#551725">
+  <meta name="description" content="Private, offline-first wine cellar management">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <title>My Wine Cellar</title>
 </head>
 <body>
-  <noscript><div style="padding:20px;font-family:Arial,sans-serif"><h1>My Wine Cellar</h1><p>JavaScript is disabled. Please enable JavaScript and open this folder using Visual Studio Code Live Server.</p></div></noscript>
-  <div id="startupMessage" style="padding:12px 16px;background:#fff4d8;color:#5c4300;font-family:Arial,sans-serif">Loading My Wine Cellar…</div>
-  <header class="app-header">
+  <header class="topbar">
     <div>
-      <p class="eyebrow">LOCAL-FIRST PWA</p>
+      <p class="kicker">VERSION 3.1 · OFFLINE FIRST</p>
       <h1>My Wine Cellar</h1>
     </div>
-    <button id="installButton" class="secondary hidden" type="button">Install</button>
+    <button id="installButton" class="button button-ghost hidden" type="button">Install</button>
   </header>
 
-  <nav class="tabs" aria-label="Main navigation">
-    <button class="tab active" data-view="dashboard">Dashboard</button>
-    <button class="tab" data-view="inventory">Inventory</button>
-    <button class="tab" data-view="add">Add wine</button>
-    <button class="tab" data-view="sommelier">Sommelier</button>
-    <button class="tab" data-view="backup">Backup</button>
+  <nav class="nav" aria-label="Primary navigation">
+    <button class="nav-item active" data-view="dashboard">Dashboard</button>
+    <button class="nav-item" data-view="inventory">Cellar</button>
+    <button class="nav-item nav-add" data-view="editor">＋</button>
+    <button class="nav-item" data-view="insights">Insights</button>
+    <button class="nav-item" data-view="settings">Settings</button>
   </nav>
 
-  <main>
+  <main class="shell">
     <section id="dashboardView" class="view active">
-      <div class="hero">
+      <article class="hero-card">
         <div>
-          <p class="eyebrow">YOUR COLLECTION</p>
-          <h2 id="totalBottles">0 bottles</h2>
-          <p id="totalWines">0 wines recorded</p>
+          <p class="kicker">COLLECTION</p>
+          <h2 id="heroBottleCount">0 bottles</h2>
+          <p id="heroSummary">No wines recorded yet</p>
         </div>
+        <button id="quickAdd" class="button button-light" type="button">Add a wine</button>
+      </article>
+
+      <div class="metric-grid">
+        <button class="metric-card" data-dashboard-filter="ready">
+          <span>Ready now</span><strong id="metricReady">0</strong>
+        </button>
+        <button class="metric-card" data-dashboard-filter="soon">
+          <span>Next 12 months</span><strong id="metricSoon">0</strong>
+        </button>
+        <button class="metric-card" data-dashboard-filter="past">
+          <span>Past window</span><strong id="metricPast">0</strong>
+        </button>
+        <button class="metric-card" data-dashboard-filter="favourite">
+          <span>Favourites</span><strong id="metricFavourites">0</strong>
+        </button>
       </div>
 
-      <div class="dashboard-grid">
-        <article class="stat-card ready">
-          <span>Ready now</span>
-          <strong id="readyCount">0</strong>
-        </article>
-        <article class="stat-card soon">
-          <span>Ready within 12 months</span>
-          <strong id="soonCount">0</strong>
-        </article>
-        <article class="stat-card keep">
-          <span>Keep</span>
-          <strong id="keepCount">0</strong>
-        </article>
-        <article class="stat-card overdue">
-          <span>Past window</span>
-          <strong id="pastCount">0</strong>
-        </article>
-      </div>
-
-      <div class="panel">
-        <div class="section-heading">
+      <section class="card">
+        <div class="section-header">
           <div>
-            <p class="eyebrow">DRINKING DASHBOARD</p>
-            <h2>What should I drink?</h2>
+            <p class="kicker ink">DRINKING PLAN</p>
+            <h2>What should I open?</h2>
           </div>
-          <select id="dashboardFilter" aria-label="Filter dashboard">
+          <select id="dashboardFilter" aria-label="Dashboard category">
             <option value="ready">Ready now</option>
             <option value="soon">Ready within 12 months</option>
             <option value="past">Past drinking window</option>
             <option value="keep">Keep</option>
+            <option value="favourite">Favourites</option>
             <option value="unknown">No drinking dates</option>
           </select>
         </div>
-        <div id="dashboardList" class="wine-list"></div>
-      </div>
+        <div id="dashboardList" class="wine-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <div>
+            <p class="kicker ink">QUICK VIEW</p>
+            <h2>Recently updated</h2>
+          </div>
+        </div>
+        <div id="recentList" class="compact-list"></div>
+      </section>
     </section>
 
     <section id="inventoryView" class="view">
-      <div class="panel">
-        <div class="section-heading">
+      <section class="card">
+        <div class="section-header">
           <div>
-            <p class="eyebrow">INVENTORY</p>
-            <h2>Your wines</h2>
+            <p class="kicker ink">INVENTORY</p>
+            <h2>Your cellar</h2>
           </div>
-          <button id="addFromInventory" class="primary" type="button">Add wine</button>
+          <button id="inventoryAdd" class="button button-primary" type="button">Add wine</button>
         </div>
 
-        <div class="search-row">
-          <input id="searchInput" type="search" placeholder="Search name, producer, region or location">
-          <select id="inventoryFilter" aria-label="Filter inventory">
-            <option value="all">All wines</option>
-            <option value="ready">Ready now</option>
-            <option value="soon">Ready within 12 months</option>
-            <option value="keep">Keep</option>
-            <option value="past">Past window</option>
-            <option value="unknown">No drinking dates</option>
-          </select>
+        <div class="searchbar">
+          <input id="searchInput" type="search" placeholder="Search wine, producer, region, grape, barcode or location">
+          <button id="clearSearch" class="icon-button" type="button" aria-label="Clear search">×</button>
         </div>
 
-        <div id="inventoryList" class="wine-list"></div>
-      </div>
-    </section>
-
-    <section id="addView" class="view">
-      <div class="panel">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">WINE RECORD</p>
-            <h2 id="formTitle">Add a wine</h2>
-          </div>
-        </div>
-
-        <form id="wineForm">
-          <input type="hidden" id="wineId">
-
-          <div class="form-grid">
-            <label class="full">
-              Wine name *
-              <input id="name" required maxlength="120" placeholder="e.g. Château Batailley">
-            </label>
-
-            <label>
-              Producer
-              <input id="producer" maxlength="120">
-            </label>
-
-            <label>
-              Vintage
-              <input id="vintage" type="number" min="1800" max="2200" inputmode="numeric">
-            </label>
-
-            <label>
-              Country
-              <input id="country" maxlength="80">
-            </label>
-
-            <label>
-              Region
-              <input id="region" maxlength="100">
-            </label>
-
-            <label>
-              Colour/style
-              <select id="colour">
-                <option value="">Select</option>
-                <option>Red</option>
-                <option>White</option>
-                <option>Rosé</option>
-                <option>Sparkling</option>
-                <option>Dessert</option>
-                <option>Fortified</option>
-                <option>Other</option>
+        <details class="filter-panel">
+          <summary>Filters and sorting</summary>
+          <div class="filter-grid">
+            <label>Status
+              <select id="filterStatus">
+                <option value="all">All statuses</option>
+                <option value="ready">Ready now</option>
+                <option value="soon">Ready within 12 months</option>
+                <option value="keep">Keep</option>
+                <option value="past">Past window</option>
+                <option value="unknown">No dates</option>
               </select>
             </label>
-
-            <label>
-              Grape variety
-              <input id="grape" maxlength="120">
+            <label>Colour
+              <select id="filterColour"><option value="all">All colours</option></select>
             </label>
+            <label>Country
+              <select id="filterCountry"><option value="all">All countries</option></select>
+            </label>
+            <label>Cellar
+              <select id="filterCellar"><option value="all">All cellars</option></select>
+            </label>
+            <label>Favourite
+              <select id="filterFavourite">
+                <option value="all">All wines</option>
+                <option value="yes">Favourites only</option>
+              </select>
+            </label>
+            <label>Sort by
+              <select id="sortBy">
+                <option value="name">Wine name</option>
+                <option value="vintage-desc">Newest vintage</option>
+                <option value="vintage-asc">Oldest vintage</option>
+                <option value="drink-by">Drink-by date</option>
+                <option value="quantity-desc">Most bottles</option>
+                <option value="value-desc">Highest collection value</option>
+                <option value="updated-desc">Recently updated</option>
+              </select>
+            </label>
+          </div>
+          <button id="resetFilters" class="button button-secondary" type="button">Reset filters</button>
+        </details>
 
-            <label>
-              Appellation
+        <p id="inventorySummary" class="muted"></p>
+        <div id="inventoryList" class="wine-grid"></div>
+      </section>
+    </section>
+
+    <section id="editorView" class="view">
+      <form id="wineForm" class="card">
+        <input id="wineId" type="hidden">
+        <div class="section-header">
+          <div>
+            <p class="kicker ink">WINE RECORD</p>
+            <h2 id="formTitle">Add a wine</h2>
+          </div>
+          <button id="favouriteButton" class="favourite-button" type="button" aria-pressed="false" title="Mark as favourite">☆</button>
+        </div>
+
+        <div class="form-section">
+          <h3>Identity</h3>
+          <div class="form-grid">
+            <label class="wide">Wine name *
+              <input id="name" required maxlength="140" placeholder="e.g. Château Batailley">
+            </label>
+            <label>Producer
+              <input id="producer" maxlength="140">
+            </label>
+            <label>Vintage
+              <input id="vintage" type="number" min="1800" max="2200" inputmode="numeric">
+            </label>
+            <label>Country
+              <input id="country" maxlength="80">
+            </label>
+            <label>Region
+              <input id="region" maxlength="100">
+            </label>
+            <label>Appellation
               <input id="appellation" maxlength="120">
             </label>
-
-            <label>
-              Classification
-              <input id="classification" maxlength="120">
+            <label>Colour/style
+              <select id="colour">
+                <option value="">Select</option>
+                <option>Red</option><option>White</option><option>Rosé</option>
+                <option>Sparkling</option><option>Dessert</option>
+                <option>Fortified</option><option>Orange</option><option>Other</option>
+              </select>
             </label>
+            <label class="wide">Grape variety or blend
+              <input id="grape" maxlength="160">
+            </label>
+          </div>
+        </div>
 
-            <label>
-              Quantity *
+        <div class="form-section">
+          <h3>Inventory and location</h3>
+          <div class="form-grid">
+            <label>Quantity *
               <input id="quantity" type="number" required min="0" max="9999" value="1" inputmode="numeric">
             </label>
-
-            <label>
-              Storage location
-              <input id="location" maxlength="100" placeholder="e.g. Rack A3">
+            <label>Bottle size
+              <select id="bottleSize">
+                <option value="375">Half bottle · 375 ml</option>
+                <option value="750" selected>Standard · 750 ml</option>
+                <option value="1500">Magnum · 1.5 L</option>
+                <option value="3000">Double magnum · 3 L</option>
+                <option value="other">Other</option>
+              </select>
             </label>
-
-            <label>
-              Purchase price (£)
-              <input id="price" type="number" min="0" step="0.01" inputmode="decimal">
+            <label>Cellar
+              <input id="cellar" maxlength="80" placeholder="e.g. Home cellar">
             </label>
+            <label>Rack
+              <input id="rack" maxlength="60" placeholder="e.g. A">
+            </label>
+            <label>Bin/shelf
+              <input id="bin" maxlength="60" placeholder="e.g. 12">
+            </label>
+            <label>Case/reference
+              <input id="caseReference" maxlength="80">
+            </label>
+            <label>Barcode
+              <input id="barcode" inputmode="numeric" maxlength="40">
+              <span class="help">EAN/UPC barcode. A barcode may not identify the vintage.</span>
+            </label>
+            <div class="button-stack">
+              <button id="scanBarcodeButton" class="button button-secondary" type="button">Scan barcode</button>
+              <button id="lookupBarcodeButton" class="button button-secondary" type="button">Look up barcode</button>
+            </div>
+          </div>
+        </div>
 
-            <label>
-              Purchase date
+        <div class="form-section">
+          <h3>Purchase and value</h3>
+          <div class="form-grid">
+            <label>Purchase date
               <input id="purchaseDate" type="date">
             </label>
+            <label>Purchase price per bottle (£)
+              <input id="price" type="number" min="0" step="0.01" inputmode="decimal">
+            </label>
+            <label>Estimated current value per bottle (£)
+              <input id="currentValue" type="number" min="0" step="0.01" inputmode="decimal">
+            </label>
+            <label>Merchant/source
+              <input id="merchant" maxlength="120">
+            </label>
+          </div>
+        </div>
 
-            <label>
-              Drink from
+        <div class="form-section">
+          <h3>Drinking window</h3>
+          <div class="form-grid">
+            <label>Drink from
               <input id="drinkFrom" type="date">
             </label>
-
-            <label>
-              Drink by
+            <label>Drink by
               <input id="drinkBy" type="date">
             </label>
-
-            <label>
-              Storage conditions
+            <label>Storage conditions
               <select id="storageCondition">
                 <option value="">Not specified</option>
                 <option value="controlled">Temperature-controlled cellar</option>
@@ -209,193 +265,150 @@
                 <option value="unknown">Unknown</option>
               </select>
             </label>
+          </div>
+        </div>
 
-            <label>
-              Bottle size
-              <select id="bottleSize">
-                <option value="750">Standard 750 ml</option>
-                <option value="375">Half bottle 375 ml</option>
-                <option value="1500">Magnum 1.5 litres</option>
-                <option value="other">Other</option>
-              </select>
+        <div class="form-section">
+          <h3>Photographs</h3>
+          <div class="photo-grid">
+            <label class="photo-input">Front label
+              <input id="frontPhotoInput" type="file" accept="image/*" capture="environment">
+              <img id="frontPhotoPreview" class="photo-preview hidden" alt="Front label preview">
+              <button id="removeFrontPhoto" class="text-button hidden" type="button">Remove</button>
             </label>
-
-            <div class="full action-panel">
-              <button id="estimateWindowButton" class="secondary" type="button">Suggest drinking window</button>
-              <div id="windowReview" class="review-panel hidden"></div>
-            </div>
-
-            <label>
-              Barcode
-              <input id="barcode" inputmode="numeric" maxlength="40">
-              <span class="field-help">Scan a retail EAN/UPC barcode or enter it manually.</span>
-              <div class="barcode-actions">
-                <button id="scanBarcodeButton" class="secondary" type="button">Scan barcode</button>
-                <button id="lookupBarcodeButton" class="secondary" type="button">Look up barcode</button>
-              </div>
+            <label class="photo-input">Rear label
+              <input id="backPhotoInput" type="file" accept="image/*" capture="environment">
+              <img id="backPhotoPreview" class="photo-preview hidden" alt="Rear label preview">
+              <button id="removeBackPhoto" class="text-button hidden" type="button">Remove</button>
             </label>
+            <label class="photo-input">Bottle photograph
+              <input id="bottlePhotoInput" type="file" accept="image/*" capture="environment">
+              <img id="bottlePhotoPreview" class="photo-preview hidden" alt="Bottle preview">
+              <button id="removeBottlePhoto" class="text-button hidden" type="button">Remove</button>
+            </label>
+          </div>
+          <p class="help">Images are resized before being saved on this device.</p>
+        </div>
 
-            <label>
-              Rating
+        <div class="form-section">
+          <h3>Personal notes</h3>
+          <div class="form-grid">
+            <label>Rating
               <select id="rating">
                 <option value="">Not rated</option>
-                <option value="1">1 / 5</option>
-                <option value="2">2 / 5</option>
-                <option value="3">3 / 5</option>
-                <option value="4">4 / 5</option>
+                <option value="1">1 / 5</option><option value="2">2 / 5</option>
+                <option value="3">3 / 5</option><option value="4">4 / 5</option>
                 <option value="5">5 / 5</option>
               </select>
             </label>
-
-            <label class="full">
-              Label photograph
-              <input id="labelPhoto" type="file" accept="image/*" capture="environment">
-              <span class="field-help">Photographs are resized before being saved on this device.</span>
-              <button id="identifyLabelButton" class="secondary" type="button">Identify wine from label</button>
-              <span class="field-help">The resized photograph is sent to your private Cloudflare Function and then to the configured AI service.</span>
+            <label>Last tasted
+              <input id="lastTasted" type="date">
             </label>
-
-            <section id="identificationReview" class="review-panel full hidden">
-              <h3>Possible wine identified</h3>
-              <div id="identificationResults"></div>
-              <div class="review-actions">
-                <button id="acceptIdentification" class="primary" type="button">Use suggested details</button>
-                <button id="rejectIdentification" class="secondary" type="button">Ignore suggestions</button>
-              </div>
-            </section>
-
-            <div id="photoPreviewWrap" class="photo-preview-wrap full hidden">
-              <img id="photoPreview" alt="Wine label preview">
-              <button id="removePhoto" class="danger-link" type="button">Remove photograph</button>
-            </div>
-
-            <label class="full">
-              Notes
-              <textarea id="notes" rows="4" maxlength="1000"></textarea>
+            <label class="wide">Tasting notes
+              <textarea id="tastingNotes" rows="4" maxlength="2000"></textarea>
+            </label>
+            <label class="wide">General notes
+              <textarea id="notes" rows="4" maxlength="2000"></textarea>
             </label>
           </div>
+        </div>
 
-          <label class="sharing-choice">
-            <input id="shareMetadata" type="checkbox" checked>
-            Share confirmed wine metadata with the private household catalogue (never quantity, price, location or personal notes).
-          </label>
+        <div class="sticky-actions">
+          <button class="button button-primary" type="submit">Save wine</button>
+          <button id="cancelEdit" class="button button-secondary" type="button">Cancel</button>
+        </div>
+      </form>
+    </section>
 
-          <div class="form-actions">
-            <button class="primary" type="submit">Save wine</button>
-            <button id="cancelEdit" class="secondary" type="button">Cancel</button>
-          </div>
-        </form>
+    <section id="insightsView" class="view">
+      <section class="card">
+        <p class="kicker ink">COLLECTION INTELLIGENCE</p>
+        <h2>Cellar insights</h2>
+        <div class="insight-summary">
+          <article><span>Estimated value</span><strong id="insightValue">£0</strong></article>
+          <article><span>Average bottle age</span><strong id="insightAge">—</strong></article>
+          <article><span>Countries</span><strong id="insightCountries">0</strong></article>
+          <article><span>Cellars</span><strong id="insightCellars">0</strong></article>
+        </div>
+      </section>
+
+      <div class="two-column">
+        <section class="card">
+          <h2>Top countries</h2>
+          <div id="countryBreakdown" class="bar-list"></div>
+        </section>
+        <section class="card">
+          <h2>Wine styles</h2>
+          <div id="colourBreakdown" class="bar-list"></div>
+        </section>
+        <section class="card">
+          <h2>Vintage profile</h2>
+          <div id="vintageBreakdown" class="bar-list"></div>
+        </section>
+        <section class="card">
+          <h2>Locations</h2>
+          <div id="cellarBreakdown" class="bar-list"></div>
+        </section>
       </div>
     </section>
 
-
-    <section id="sommelierView" class="view">
-      <div class="panel">
-        <p class="eyebrow">PERSONAL SOMMELIER</p>
-        <h2>Choose a bottle from your cellar</h2>
-        <p>Only a shortlist of your wine metadata is sent when you ask for a recommendation. Personal notes, purchase price and exact storage location are excluded.</p>
-        <div class="form-grid">
-          <label class="full">Meal or occasion
-            <textarea id="sommelierMeal" rows="3" placeholder="e.g. Roast lamb for six people on Sunday"></textarea>
-          </label>
-          <label>Number of people
-            <input id="sommelierPeople" type="number" min="1" max="30" value="2">
-          </label>
-          <label>Preference
-            <select id="sommelierPreference">
-              <option value="best-match">Best match</option>
-              <option value="drink-soon">Prioritise wines to drink soon</option>
-              <option value="avoid-valuable">Avoid the most valuable bottles</option>
-              <option value="special">Special occasion</option>
-            </select>
-          </label>
-        </div>
-        <button id="askSommelierButton" class="primary" type="button">Ask the sommelier</button>
-        <div id="sommelierResults" class="review-panel hidden"></div>
-      </div>
-    </section>
-
-    <section id="backupView" class="view">
-      <div class="panel">
-        <p class="eyebrow">BACKUP & RESTORE</p>
-        <h2>Protect your cellar data</h2>
-        <div class="panel inset">
-          <h3>Cloud features</h3>
-          <label>Private app access key
-            <input id="appAccessKey" type="password" autocomplete="off" placeholder="Enter the key configured in Cloudflare">
-          </label>
-          <div class="review-actions">
-            <button id="saveAccessKey" class="secondary" type="button">Save key on this device</button>
-            <button id="testCloudButton" class="secondary" type="button">Test cloud connection</button>
-          </div>
-          <p id="cloudStatus" class="field-help">Cloud features require the D1 binding, OpenAI API key and app access key to be configured in Cloudflare.</p>
-        </div>
-        <p>Your inventory is stored on this device. Export a backup regularly and save it somewhere safe, such as iCloud Drive or OneDrive.</p>
-
-        <div class="backup-grid">
-          <button id="exportJson" class="primary" type="button">Export full backup</button>
-          <button id="exportCsv" class="secondary" type="button">Export CSV</button>
-          <label class="file-button secondary">
-            Restore backup
+    <section id="settingsView" class="view">
+      <section class="card">
+        <p class="kicker ink">BACKUP AND TRANSFER</p>
+        <h2>Protect your cellar</h2>
+        <p>Your personal inventory is stored locally on this device. Export a full backup regularly.</p>
+        <div class="action-grid">
+          <button id="exportJson" class="button button-primary" type="button">Export full backup</button>
+          <button id="exportCsv" class="button button-secondary" type="button">Export CSV</button>
+          <label class="button button-secondary file-button">Restore JSON backup
             <input id="importJson" type="file" accept=".json,application/json">
           </label>
+          <label class="button button-secondary file-button">Import CSV
+            <input id="importCsv" type="file" accept=".csv,text/csv">
+          </label>
         </div>
+        <div class="notice warning"><strong>Restore JSON</strong> replaces the current inventory. CSV import adds or updates records after confirmation.</div>
+      </section>
 
-        <div class="warning-box">
-          <strong>Important:</strong> restoring a backup replaces the wines currently stored on this device.
-        </div>
+      <section class="card">
+        <p class="kicker ink">INSTALLATION</p>
+        <h2>Add to an iPhone</h2>
+        <ol>
+          <li>Open the live website in Safari.</li>
+          <li>Tap the Share button.</li>
+          <li>Tap <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong>.</li>
+        </ol>
+      </section>
 
-        <div class="panel inset">
-          <h3>Install on iPhone</h3>
-          <ol>
-            <li>Open the live website in Safari.</li>
-            <li>Tap the Share button.</li>
-            <li>Tap <strong>Add to Home Screen</strong>.</li>
-            <li>Tap <strong>Add</strong>.</li>
-          </ol>
-        </div>
-
-        <button id="clearAll" class="danger" type="button">Delete all local data</button>
-      </div>
+      <section class="card danger-zone">
+        <p class="kicker ink">DANGER ZONE</p>
+        <h2>Delete local data</h2>
+        <button id="clearAll" class="button button-danger" type="button">Delete all wines on this device</button>
+      </section>
     </section>
   </main>
 
-
-  <div id="barcodeScanner" class="scanner-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="scannerTitle">
-    <div class="scanner-panel">
-      <h2 id="scannerTitle">Scan bottle barcode</h2>
-      <video id="barcodeVideo" playsinline muted aria-label="Barcode camera"></video>
-      <p id="scannerMessage">Position the barcode clearly inside the camera view.</p>
-      <button id="closeScannerButton" class="secondary" type="button">Cancel</button>
+  <div id="barcodeScanner" class="scanner-overlay hidden" role="dialog" aria-modal="true">
+    <div class="scanner-card">
+      <h2>Scan bottle barcode</h2>
+      <video id="barcodeVideo" playsinline muted></video>
+      <p id="scannerMessage">Position the barcode clearly in the camera view.</p>
+      <button id="closeScannerButton" class="button button-secondary" type="button">Cancel</button>
     </div>
   </div>
 
   <dialog id="detailsDialog">
     <div id="dialogContent"></div>
-    <form method="dialog">
-      <button class="secondary" type="submit">Close</button>
-    </form>
+    <form method="dialog"><button class="button button-secondary" type="submit">Close</button></form>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script>
-    window.addEventListener("error", function (event) {
-      const box = document.getElementById("startupMessage");
-      if (box) { box.textContent = "The app could not start: " + (event.message || "unknown error") + ". Open it with Live Server rather than by double-clicking index.html."; }
-    });
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.2/umd/zxing-browser.min.js"></script>
   <script src="database.js"></script>
   <script src="wine-lookup.js"></script>
   <script src="scanner.js"></script>
-  <script src="cloud-api.js"></script>
   <script src="app.js"></script>
-  <script>
-    window.addEventListener("load", function () {
-      const box = document.getElementById("startupMessage");
-      if (box) box.remove();
-    });
-  </script>
 </body>
 </html>
