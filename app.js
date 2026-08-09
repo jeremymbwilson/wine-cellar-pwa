@@ -15,7 +15,67 @@ function totalValue(w){return unitValue(w)*Number(w.quantity||0)}
 function card(w){const s=status(w),photo=w.photos?.front||w.photo||w.photos?.bottle||"",meta=[w.producer,w.region,w.country].filter(Boolean).join(" · ");return`<article class="wine-card" data-id="${w.id}">${photo?`<img class="wine-photo" src="${photo}" alt="${esc(title(w))}">`:`<div class="wine-placeholder">🍷</div>`}<div><h3>${w.favourite?"★ ":""}${esc(title(w))}</h3><p class="wine-meta">${esc(meta||"No additional details")}</p><p class="wine-meta">${esc(locationText(w)||"Location not set")}</p><p class="wine-value"><strong>${Number(w.quantity||0)}</strong> bottle${Number(w.quantity||0)===1?"":"s"}${totalValue(w)?` · ${money(totalValue(w))}`:""}</p><span class="badge ${s}">${statusText(s)}</span></div><div class="wine-actions"><button data-action="details">Details</button><button data-action="edit">Edit</button><button data-action="add">+1</button><button data-action="drink" ${Number(w.quantity||0)<1?"disabled":""}>Drink one</button><button data-action="delete">Delete</button></div></article>`}
 function list(id,items){$(id).innerHTML=items.length?items.map(card).join(""):`<div class="empty">No wines match this view.</div>`}
 function options(id,values,label){const current=$(id).value;$(id).innerHTML=`<option value="all">${label}</option>`+[...new Set(values.filter(Boolean))].sort().map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");if([...$(id).options].some(o=>o.value===current))$(id).value=current}
-function renderDashboard(){const bottles=wines.reduce((a,w)=>a+Number(w.quantity||0),0),counts={ready:0,soon:0,past:0,keep:0,unknown:0};wines.forEach(w=>counts[status(w)]++);$("heroBottleCount").textContent=`${bottles} bottle${bottles===1?"":"s"}`;$("heroSummary").textContent=`${wines.length} wine${wines.length===1?"":"s"} · ${money(wines.reduce((a,w)=>a+totalValue(w),0))} estimated value`;$("metricReady").textContent=counts.ready;$("metricSoon").textContent=counts.soon;$("metricPast").textContent=counts.past;$("metricFavourites").textContent=wines.filter(w=>w.favourite).length;const f=$("dashboardFilter").value;list("dashboardList",wines.filter(w=>f==="favourite"?w.favourite:status(w)===f).slice(0,12));const recent=[...wines].sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt))).slice(0,6);$("recentList").innerHTML=recent.length?recent.map(w=>`<div class="compact-row"><span><strong>${esc(title(w))}</strong><br><small>${esc(locationText(w)||"No location")}</small></span><span>${Number(w.quantity||0)} bottle${Number(w.quantity||0)===1?"":"s"}</span></div>`).join(""):`<div class="empty">No recent wines.</div>`}
+function renderDashboard(){
+  const bottles=wines.reduce((a,w)=>a+Number(w.quantity||0),0);
+  const intelligent=wines.map(w=>{
+    const m=w.smartCaptureMeta||{};
+    return {w,s:intelligentDrinkStatus(w.drinkFrom,w.drinkBy,m.peakFromYear,m.peakToYear)};
+  });
+  const bottleCounts={};
+  intelligent.forEach(({w,s})=>{bottleCounts[s.key]=(bottleCounts[s.key]||0)+Number(w.quantity||0)});
+  $("heroBottleCount").textContent=`${bottles} bottle${bottles===1?"":"s"}`;
+  $("heroSummary").textContent=`${wines.length} wine${wines.length===1?"":"s"} · ${money(wines.reduce((a,w)=>a+totalValue(w),0))} estimated value`;
+  $("metricReady").textContent=(bottleCounts["ready"]||0)+(bottleCounts["at-peak"]||0);
+  $("metricSoon").textContent=bottleCounts["approaching"]||0;
+  $("metricPast").textContent=bottleCounts["drink-soon"]||0;
+  $("metricFavourites").textContent=wines.filter(w=>w.favourite).reduce((a,w)=>a+Number(w.quantity||0),0);
+
+  const f=$("dashboardFilter").value;
+  const normalFiltered=wines.filter(w=>f==="favourite"?w.favourite:status(w)===f).slice(0,12);
+
+  const priorityOrder={"drink-soon":0,"at-peak":1,"ready":2,"approaching":3,"too-young":4,"unknown":9};
+  const ranked=[...intelligent].filter(x=>x.s.key!=="unknown").sort((a,b)=>(priorityOrder[a.s.key]??9)-(priorityOrder[b.s.key]??9));
+  const tonight=ranked.find(x=>x.s.key==="drink-soon")||ranked.find(x=>x.s.key==="at-peak")||ranked.find(x=>x.s.key==="ready");
+
+  const summaryDefs=[
+    ["drink-soon","Past Window"],
+    ["at-peak","At Peak"],
+    ["ready","Ready to Drink"],
+    ["approaching","Approaching"],
+    ["too-young","Too Young"]
+  ];
+  const summary=summaryDefs.filter(([k])=>bottleCounts[k]).map(([k,label])=>`<div class="drink-summary-box">${intelligentStatusBadge({key:k,label})}<strong>${bottleCounts[k]}</strong></div>`).join("");
+
+  const intelligenceBlock = ranked.length ? `
+    <section class="cellar-intelligence">
+      <div class="cellar-intelligence-head">
+        <div><span class="eyebrow">Drinking intelligence</span><h3>Your cellar today</h3></div>
+      </div>
+      <div class="drink-summary">${summary}</div>
+      ${tonight?`<div class="tonight-card">
+        <span class="eyebrow">Tonight's suggestion</span>
+        <h3>${esc(title(tonight.w))}</h3>
+        <p>${esc(tonight.w.producer||"")}</p>
+        <div class="tonight-status">${intelligentStatusBadge({key:tonight.s.key,label:tonight.s.key==="drink-soon"?"Past Window":tonight.s.label})}<span>${esc(tonight.s.note)}</span></div>
+        ${tonight.w.smartCaptureMeta?.styleSummary?`<p><strong>Style:</strong> ${esc(tonight.w.smartCaptureMeta.styleSummary)}</p>`:""}
+        ${Array.isArray(tonight.w.smartCaptureMeta?.foodPairings)&&tonight.w.smartCaptureMeta.foodPairings.length?`<p><strong>Food:</strong> ${tonight.w.smartCaptureMeta.foodPairings.map(esc).join(" · ")}</p>`:""}
+      </div>`:""}
+      <div class="priority-heading"><strong>Priority bottles</strong><span>Past-window and peak bottles first</span></div>
+      <div class="priority-cards">${ranked.slice(0,8).map(({w,s})=>`<article class="priority-card">
+        <div>
+          <h4>${esc(title(w))}</h4>
+          <p>${esc(w.producer||"")}</p>
+          <small>${esc(s.note)}</small>
+        </div>
+        <div>${intelligentStatusBadge({key:s.key,label:s.key==="drink-soon"?"Past Window":s.label})}<small>${Number(w.quantity||0)} bottle${Number(w.quantity||0)===1?"":"s"}</small></div>
+      </article>`).join("")}</div>
+    </section>` : "";
+
+  $("dashboardList").innerHTML=intelligenceBlock+(normalFiltered.length?normalFiltered.map(card).join(""):`<div class="empty">No wines match this view.</div>`);
+
+  const recent=[...wines].sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt))).slice(0,6);
+  $("recentList").innerHTML=recent.length?recent.map(w=>`<div class="compact-row"><span><strong>${esc(title(w))}</strong><br><small>${esc(locationText(w)||"No location")}</small></span><span>${Number(w.quantity||0)} bottle${Number(w.quantity||0)===1?"":"s"}</span></div>`).join(""):`<div class="empty">No recent wines.</div>`;
+}
 function filtered(){const q=$("searchInput").value.trim().toLowerCase(),fs=$("filterStatus").value,fc=$("filterColour").value,fco=$("filterCountry").value,fce=$("filterCellar").value,ff=$("filterFavourite").value;let a=wines.filter(w=>[w.name,w.producer,w.vintage,w.country,w.region,w.appellation,w.grape,w.barcode,w.cellar,w.rack,w.bin,w.caseReference].join(" ").toLowerCase().includes(q));if(fs!=="all")a=a.filter(w=>status(w)===fs);if(fc!=="all")a=a.filter(w=>w.colour===fc);if(fco!=="all")a=a.filter(w=>w.country===fco);if(fce!=="all")a=a.filter(w=>w.cellar===fce);if(ff==="yes")a=a.filter(w=>w.favourite);const sort=$("sortBy").value;a.sort((x,y)=>sort==="vintage-desc"?Number(y.vintage||0)-Number(x.vintage||0):sort==="vintage-asc"?Number(x.vintage||9999)-Number(y.vintage||9999):sort==="drink-by"?String(x.drinkBy||"9999").localeCompare(String(y.drinkBy||"9999")):sort==="quantity-desc"?Number(y.quantity||0)-Number(x.quantity||0):sort==="value-desc"?totalValue(y)-totalValue(x):sort==="updated-desc"?String(y.updatedAt).localeCompare(String(x.updatedAt)):title(x).localeCompare(title(y)));return a}
 function renderInventory(){options("filterColour",wines.map(w=>w.colour),"All colours");options("filterCountry",wines.map(w=>w.country),"All countries");options("filterCellar",wines.map(w=>w.cellar),"All cellars");const a=filtered();$("inventorySummary").textContent=`Showing ${a.length} of ${wines.length} wines`;list("inventoryList",a)}
 function breakdown(values){const m={};values.filter(Boolean).forEach(v=>m[v]=(m[v]||0)+1);return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,8)}
