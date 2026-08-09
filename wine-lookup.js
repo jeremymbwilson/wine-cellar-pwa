@@ -15,7 +15,7 @@ const WineLookup=(()=>{
     const fields=["code","product_name","product_name_en","brands","countries","countries_tags","origins","origins_tags","categories","categories_tags","labels_tags","image_front_url","image_url"].join(",");
     const url=`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}.json?fields=${encodeURIComponent(fields)}`;
     const r=await fetch(url,{headers:{Accept:"application/json"}});
-    if(!r.ok)throw new Error("External product lookup is unavailable.");
+    if(!r.ok)throw new Error("Online lookup temporarily unavailable.");
     const x=await r.json();
     if(x.status!==1||!x.product)return null;
     const p=x.product;
