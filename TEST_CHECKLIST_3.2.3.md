@@ -16,3 +16,8 @@ If you see “Smart Recognition is not configured yet”, add the `GEMINI_API_KE
 ## Preview 2 regression
 - Repeat the label that returned HTTP 400 in Preview 1.
 - If it fails, record the full on-screen Gemini error message and Cloudflare response status.
+
+
+## Preview 3 model update
+- Repeat the same label that reached Gemini but failed because the 2.5 Flash-Lite model was unavailable.
+- Confirm Smart Recognition returns structured wine suggestions using Gemini 3.1 Flash-Lite.
