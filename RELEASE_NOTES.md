@@ -1,3 +1,12 @@
+# My Wine Cellar v3.2.1 Preview 2
+
+## iPhone scanner fix
+- ZXing now loads on demand when Scan Barcode is tapped.
+- Uses the ZXing project's documented UNPKG browser loading route first, with jsDelivr as a fallback.
+- Requests the rear-facing camera at a higher ideal resolution for easier barcode focus.
+- Bumps the service-worker cache so iPhones receive the updated scanner code.
+- Smart Capture lookup, local duplicate matching and Add One Bottle behaviour are unchanged.
+
 # Version 3.2.1 Preview 1 — Smart Capture
 
 - Barcode-first add workflow.
