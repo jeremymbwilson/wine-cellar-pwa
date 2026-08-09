@@ -90,3 +90,11 @@ dialog::backdrop{background:rgba(0,0,0,.5)}.detail-gallery{display:grid;grid-tem
 
 /* v3.2.3 Preview 1 — Smart Recognition */
 #recogniseLabelButton{width:100%;margin-top:.65rem}.smart-warning{padding:.7rem;border-radius:9px;background:#fff2cf;color:#6d5312;font-size:.84rem}
+
+
+/* v3.2.4 Testing Preview 1 */
+.testing-chip{background:#fff2cf!important;color:#5f4500!important;border-color:#d8b95f!important}
+.enrichment-summary{margin:.75rem 0;padding:.8rem;border-radius:10px;background:#f7f3ef}
+.enrichment-summary strong{color:var(--wine)}
+.enrichment-list{margin:.45rem 0 .2rem;padding-left:1.2rem;color:var(--muted);font-size:.84rem}
+.enrichment-estimate{padding:.7rem;border-radius:9px;background:#eef4fa;color:#294e72;font-size:.84rem}

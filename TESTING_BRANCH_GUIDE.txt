@@ -1,0 +1,14 @@
+MY WINE CELLAR v3.2.4 — TESTING BUILD
+
+IMPORTANT:
+The live v3.2.3 Preview 3 build should remain unchanged while external testing is under way.
+
+Recommended deployment:
+1. Create a separate Git branch named:
+   testing-3.2.4
+2. Put this package onto that branch only.
+3. Push the branch to GitHub.
+4. Use Cloudflare's preview deployment for the testing branch.
+5. Do not merge testing-3.2.4 into main until v3.2.3 external feedback has been reviewed.
+
+The production `main` branch remains the frozen external-test version.

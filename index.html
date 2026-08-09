@@ -15,7 +15,7 @@
     <div>
       <p class="kicker">VERSION 3.1 · OFFLINE FIRST</p>
       <h1>My Wine Cellar</h1>
-      <span class="preview-chip">3.2.1 Preview · Smart Capture</span>
+      <span class="preview-chip testing-chip">3.2.4 TESTING · Smart Capture + Enrichment</span>
     </div>
     <button id="installButton" class="button button-ghost hidden" type="button">Install</button>
   </header>
@@ -269,6 +269,10 @@
                 <option value="unknown">Unknown</option>
               </select>
             </label>
+            <div class="button-stack">
+              <button id="estimateWindowButton" class="button button-secondary" type="button">🍷 Estimate drinking window</button>
+            </div>
+            <div id="enrichmentResult" class="smart-capture-result wide hidden"></div>
           </div>
         </div>
 
