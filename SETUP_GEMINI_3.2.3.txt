@@ -1,0 +1,13 @@
+MY WINE CELLAR v3.2.3 PREVIEW 1 — ONE-TIME GEMINI SETUP
+
+This preview keeps the Gemini API key on Cloudflare. It is NOT stored in the browser/PWA.
+
+1. Create a Gemini API key in Google AI Studio.
+2. In Cloudflare, open the wine-cellar-pwa Pages project.
+3. Open Settings and find Variables and Secrets for the production environment.
+4. Add a SECRET named exactly:
+   GEMINI_API_KEY
+5. Paste the API key as the secret value and save it.
+6. Redeploy the latest deployment so the new secret is available.
+
+Do not put the API key in app.js, index.html, GitHub, or any client-side file.

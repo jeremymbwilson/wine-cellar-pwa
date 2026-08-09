@@ -87,3 +87,6 @@ dialog::backdrop{background:rgba(0,0,0,.5)}.detail-gallery{display:grid;grid-tem
 .confidence{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .55rem;border-radius:999px;font-size:.75rem;font-weight:850}.confidence.high{background:#e5f3e8;color:var(--good)}.confidence.medium{background:#fff2cf;color:var(--amber)}.confidence.low{background:#f9e2e2;color:var(--bad)}
 .smart-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem}.smart-actions .button{flex:1 1 140px}.smart-note{margin:.65rem 0 0;color:var(--muted);font-size:.8rem}
 @media(max-width:520px){.smart-result-grid{grid-template-columns:1fr}.button-stack{grid-template-columns:1fr}}
+
+/* v3.2.3 Preview 1 — Smart Recognition */
+#recogniseLabelButton{width:100%;margin-top:.65rem}.smart-warning{padding:.7rem;border-radius:9px;background:#fff2cf;color:#6d5312;font-size:.84rem}
