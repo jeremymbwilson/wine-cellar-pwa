@@ -1,7 +1,7 @@
 {
   "name": "My Wine Cellar",
   "short_name": "Wine Cellar",
-  "description": "Private offline-first wine cellar management",
+  "description": "My Wine Cellar 3.2.1 Preview \u2014 Smart Capture barcode intelligence",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

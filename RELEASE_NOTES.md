@@ -1,3 +1,13 @@
+# Version 3.2.1 Preview 1 — Smart Capture
+
+- Barcode-first add workflow.
+- Local barcode duplicate detection.
+- One-tap quantity increase for known wines.
+- External Open Food Facts lookup for unknown barcodes.
+- Review panel with confidence indication before applying suggestions.
+- Scanner library reference updated to @zxing/browser 0.2.1.
+- Service-worker cache bumped for this preview.
+
 # Version 3.1 Release Notes
 
 ## New

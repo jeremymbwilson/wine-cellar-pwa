@@ -15,6 +15,7 @@
     <div>
       <p class="kicker">VERSION 3.1 · OFFLINE FIRST</p>
       <h1>My Wine Cellar</h1>
+      <span class="preview-chip">3.2.1 Preview · Smart Capture</span>
     </div>
     <button id="installButton" class="button button-ghost hidden" type="button">Install</button>
   </header>
@@ -223,9 +224,11 @@
               <span class="help">EAN/UPC barcode. A barcode may not identify the vintage.</span>
             </label>
             <div class="button-stack">
-              <button id="scanBarcodeButton" class="button button-secondary" type="button">Scan barcode</button>
+              <button id="scanBarcodeButton" class="button button-primary" type="button">📷 Scan barcode</button>
               <button id="lookupBarcodeButton" class="button button-secondary" type="button">Look up barcode</button>
             </div>
+            <div id="smartCaptureStatus" class="smart-capture-status wide hidden" role="status" aria-live="polite"></div>
+            <div id="smartCaptureResult" class="smart-capture-result wide hidden"></div>
           </div>
         </div>
 
@@ -405,7 +408,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.2/umd/zxing-browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
   <script src="database.js"></script>
   <script src="wine-lookup.js"></script>
   <script src="scanner.js"></script>
