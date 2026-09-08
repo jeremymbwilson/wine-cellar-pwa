@@ -23,7 +23,7 @@ const WineLookup=(()=>{
     if(x.status!==1||!x.product)return null;
     const p=x.product;
     const categories=[p.categories,...(p.categories_tags||[])].join(" ").toLowerCase();
-    const looksLikeWine=/wine|vin-|vin |vino|champagne|prosecco|cava/.test(categories+" "+String(p.product_name||"").toLowerCase());
+    const looksLikeWine=/wine|vin-|vin |vino|champagne|prosecco|proseco|cava/.test(categories+" "+String(p.product_name||"").toLowerCase());
     const result={
       barcode:String(x.code||barcode),
       name:first(p.product_name_en,p.product_name),
