@@ -148,9 +148,20 @@ async function lookup(code){
   if(local){showLocalMatch(local,code);return}
   smartStatus(2,"Searching Open Food Facts…");
   try{
-    const p=await WineLookup.lookupOpenFoodFacts(code);
-    if(!p){smartStatus(3,"No online match found",true);offerLabelFallback("No online match found");toast("No online match found — photograph the label instead.");return}
-    showExternalMatch(p,code);
+  let p=await WineLookup.lookupOpenFoodFacts(code);
+
+if(!p){
+  p=await WineLookup.lookupUPCitemdb(code);
+}
+
+if(!p){
+  smartStatus(3,"No online match found",true);
+  offerLabelFallback("No online match found");
+  toast("No online match found — photograph the label instead.");
+  return;
+}
+
+showExternalMatch(p,code);
   }catch(e){console.error(e);smartStatus(2,"Online lookup temporarily unavailable",true);offerLabelFallback("Online lookup is temporarily unavailable");toast("Online lookup is temporarily unavailable — try again or photograph the label.")}
 }
 
