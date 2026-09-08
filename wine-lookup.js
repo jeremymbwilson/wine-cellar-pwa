@@ -26,7 +26,7 @@ const WineLookup=(()=>{
     const looksLikeWine=/wine|vin-|vin |vino|champagne|prosecco|proseco|cava/.test(categories+" "+String(p.product_name||"").toLowerCase());
     const result={
       barcode:String(x.code||barcode),
-      name:first(p.product_name_en,p.product_name),
+      name:first(p.product_name_en,p.product_name).replace(/^proseco$/i,"Prosecco"),
       producer:first(p.brands),
       country:cleanTag(first(p.countries_tags?.[0],p.countries)),
       region:cleanTag(first(p.origins_tags?.[0],p.origins)),
